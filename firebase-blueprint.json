@@ -1,0 +1,184 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile registered via Firebase Auth",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "accountStatus": { "type": "string", "enum": ["active", "suspended"] },
+        "role": { "type": "string", "enum": ["admin", "principal", "staff", "parent"] },
+        "phoneNumber": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["email", "accountStatus"]
+    },
+    "School": {
+      "title": "School",
+      "description": "Educational institution profile and master metadata",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "slug": { "type": "string", "maxLength": 80, "pattern": "^[a-z0-9-]+$" },
+        "description": { "type": "string", "maxLength": 2000 },
+        "schoolType": { "type": "string", "enum": ["public", "private", "congregational"] },
+        "department": { "type": "string", "maxLength": 50 },
+        "commune": { "type": "string", "maxLength": 80 },
+        "address": { "type": "string", "maxLength": 200 },
+        "publicEmail": { "type": "string", "maxLength": 120 },
+        "publicPhone": { "type": "string", "maxLength": 50 },
+        "whatsappPhone": { "type": "string", "maxLength": 50 },
+        "logoUrl": { "type": "string", "maxLength": 500 },
+        "coverImageUrl": { "type": "string", "maxLength": 500 },
+        "status": { "type": "string", "enum": ["draft", "pending_review", "published", "suspended"] },
+        "verificationStatus": { "type": "string", "enum": ["unverified", "pending", "verified", "rejected"] },
+        "levelsOffered": { "type": "array" },
+        "languages": { "type": "array" },
+        "facilities": { "type": "array" },
+        "tuitionInfo": { "type": "string", "maxLength": 1000 },
+        "admissionsInfo": { "type": "string", "maxLength": 1000 },
+        "newEnrollmentOpen": { "type": "boolean" },
+        "reEnrollmentOpen": { "type": "boolean" },
+        "staffIds": { "type": "array" },
+        "staffMembers": { "type": "array" },
+        "publishedAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["ownerId", "name", "slug", "status", "verificationStatus"]
+    },
+    "Announcement": {
+      "title": "Announcement",
+      "description": "School announcement or publication",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string", "maxLength": 128 },
+        "schoolName": { "type": "string", "maxLength": 150 },
+        "academicYearId": { "type": "string", "maxLength": 128 },
+        "academicYearName": { "type": "string", "maxLength": 50 },
+        "title": { "type": "string", "maxLength": 200 },
+        "content": { "type": "string", "maxLength": 20000 },
+        "category": { "type": "string", "enum": ["new_enrollment", "re_enrollment", "examinations", "important_dates", "school_activities", "general"] },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "imageUrl": { "type": "string", "maxLength": 500 },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "publishedAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["schoolId", "title", "content", "status"]
+    },
+    "AcademicYear": {
+      "title": "AcademicYear",
+      "description": "School academic year definition and enrollment availability",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 50 },
+        "startDate": { "type": "string", "maxLength": 30 },
+        "endDate": { "type": "string", "maxLength": 30 },
+        "status": { "type": "string", "enum": ["upcoming", "current", "past"] },
+        "enrollmentOpen": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["schoolId", "name", "startDate", "endDate", "status", "enrollmentOpen"]
+    },
+    "ApplicationForm": {
+      "title": "ApplicationForm",
+      "description": "Customizable admissions form configured by the school director",
+      "type": "object",
+      "properties": {
+        "schoolId": { "type": "string", "maxLength": 128 },
+        "formType": { "type": "string", "enum": ["new_enrollment", "re_enrollment"] },
+        "title": { "type": "string", "maxLength": 150 },
+        "description": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["draft", "open", "closed"] },
+        "fields": { "type": "array" },
+        "requiredDocuments": { "type": "array" },
+        "version": { "type": "integer" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["schoolId", "formType", "status", "fields"]
+    },
+    "ChildProfile": {
+      "title": "ChildProfile",
+      "description": "Child profile maintained by a parent for common app reuse",
+      "type": "object",
+      "properties": {
+        "parentId": { "type": "string", "maxLength": 128 },
+        "firstName": { "type": "string", "maxLength": 80 },
+        "lastName": { "type": "string", "maxLength": 80 },
+        "dateOfBirth": { "type": "string", "maxLength": 30 },
+        "gender": { "type": "string", "maxLength": 20 },
+        "currentGrade": { "type": "string", "maxLength": 60 },
+        "previousSchool": { "type": "string", "maxLength": 150 },
+        "guardianName": { "type": "string", "maxLength": 120 },
+        "guardianPhone": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["parentId", "firstName", "lastName", "guardianName", "guardianPhone"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "Online admissions application submitted by parent to a specific school",
+      "type": "object",
+      "properties": {
+        "referenceNumber": { "type": "string", "maxLength": 50 },
+        "schoolId": { "type": "string", "maxLength": 128 },
+        "schoolName": { "type": "string", "maxLength": 150 },
+        "academicYearId": { "type": "string", "maxLength": 128 },
+        "academicYearName": { "type": "string", "maxLength": 50 },
+        "applicantId": { "type": "string", "maxLength": 128 },
+        "childId": { "type": "string", "maxLength": 128 },
+        "studentName": { "type": "string", "maxLength": 120 },
+        "formType": { "type": "string", "enum": ["new_enrollment", "re_enrollment"] },
+        "requestedLevel": { "type": "string", "maxLength": 60 },
+        "guardianName": { "type": "string", "maxLength": 120 },
+        "guardianPhone": { "type": "string", "maxLength": 50 },
+        "answers": { "type": "object" },
+        "status": { "type": "string", "enum": ["draft", "submitted", "under_review", "info_requested", "accepted", "rejected", "waitlisted", "withdrawn"] },
+        "statusHistory": { "type": "array" },
+        "submittedAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["referenceNumber", "schoolId", "academicYearId", "applicantId", "studentName", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/schools/{schoolId}": {
+      "schema": "School",
+      "description": "Schools directory and ownership"
+    },
+    "/schools/{schoolId}/academicYears/{yearId}": {
+      "schema": "AcademicYear",
+      "description": "Academic years managed independently by each school"
+    },
+    "/schools/{schoolId}/forms/{formType}": {
+      "schema": "ApplicationForm",
+      "description": "Customizable new_enrollment and re_enrollment forms"
+    },
+    "/announcements/{announcementId}": {
+      "schema": "Announcement",
+      "description": "Announcements across schools"
+    },
+    "/children/{childId}": {
+      "schema": "ChildProfile",
+      "description": "Parent child profiles"
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Admissions applications"
+    }
+  }
+}

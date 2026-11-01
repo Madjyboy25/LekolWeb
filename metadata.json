@@ -1,0 +1,6 @@
+{
+  "name": "LekòlWeb — Plateforme de création de sites web pour écoles en Haïti",
+  "description": "LekòlWeb permet aux écoles haïtiennes de concevoir, personnaliser et publier facilement leur propre site web officiel avec pré-inscriptions en ligne et gestion d'annonces.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

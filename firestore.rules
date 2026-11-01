@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'madjyboy25@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isSchoolOwner(schoolId) {
+      return isSignedIn() && (
+        get(/databases/$(database)/documents/schools/$(schoolId)).data.ownerId == request.auth.uid
+      );
+    }
+
+    function isSchoolStaff(schoolId) {
+      return isSignedIn() && (
+        isSchoolOwner(schoolId) ||
+        (
+          get(/databases/$(database)/documents/schools/$(schoolId)).data.staffIds != null &&
+          request.auth.uid in get(/databases/$(database)/documents/schools/$(schoolId)).data.staffIds
+        )
+      );
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Admins Collection
+    match /admins/{userId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Schools Collection
+    match /schools/{schoolId} {
+      // Anyone can read and list schools in the public directory
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(schoolId) &&
+        (request.resource.data.ownerId == request.auth.uid || isAdmin());
+      allow update: if isValidId(schoolId) && (
+        (isSignedIn() && resource.data.ownerId == request.auth.uid) ||
+        isSchoolStaff(schoolId) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(schoolId) && (
+        (isSignedIn() && resource.data.ownerId == request.auth.uid) ||
+        isAdmin()
+      );
+
+      // Customizable Forms Subcollection
+      match /forms/{formType} {
+        allow read: if true;
+        allow write: if isSchoolStaff(schoolId) || isAdmin();
+      }
+
+      // Academic Years Subcollection
+      match /academicYears/{yearId} {
+        allow read: if true;
+        allow write: if isSchoolStaff(schoolId) || isAdmin();
+      }
+    }
+
+    // Announcements Collection
+    match /announcements/{announcementId} {
+      allow read: if true;
+      allow create: if isSignedIn() && isValidId(announcementId) && (
+        isSchoolStaff(request.resource.data.schoolId) ||
+        isAdmin()
+      );
+      allow update, delete: if isValidId(announcementId) && (
+        isSchoolStaff(resource.data.schoolId) ||
+        isAdmin()
+      );
+    }
+
+    // Children Profiles Collection (Parent Common App)
+    match /children/{childId} {
+      allow get: if isSignedIn() && (resource.data.parentId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.parentId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(childId) && request.resource.data.parentId == request.auth.uid;
+      allow update, delete: if isSignedIn() && isValidId(childId) && (
+        (resource.data.parentId == request.auth.uid && request.resource.data.parentId == request.auth.uid) ||
+        isAdmin()
+      );
+    }
+
+    // Applications Collection (Central Common App)
+    match /applications/{applicationId} {
+      // Parents can read their own applications. School staff can read applications submitted to their school.
+      allow get: if isValidId(applicationId) && (
+        (isSignedIn() && resource.data.applicantId == request.auth.uid) ||
+        (isSignedIn() && isSchoolStaff(resource.data.schoolId)) ||
+        isAdmin()
+      );
+      allow list: if (
+        (isSignedIn() && resource.data.applicantId == request.auth.uid) ||
+        (isSignedIn() && isSchoolStaff(resource.data.schoolId)) ||
+        isAdmin()
+      );
+      // Authenticated parents can create an application
+      allow create: if isSignedIn() && isValidId(applicationId) &&
+        request.resource.data.applicantId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['schoolId', 'academicYearId', 'studentName', 'referenceNumber', 'status']) &&
+        (
+          !exists(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)/academicYears/$(request.resource.data.academicYearId)) ||
+          (
+            get(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)/academicYears/$(request.resource.data.academicYearId)).data.status != 'past' &&
+            get(/databases/$(database)/documents/schools/$(request.resource.data.schoolId)/academicYears/$(request.resource.data.academicYearId)).data.enrollmentOpen == true
+          )
+        );
+      // Parents can update their own draft application. School staff can update status & internal notes.
+      allow update: if isValidId(applicationId) && (
+        (isSignedIn() && resource.data.applicantId == request.auth.uid && resource.data.status == 'draft') ||
+        (isSignedIn() && isSchoolStaff(resource.data.schoolId)) ||
+        isAdmin()
+      );
+      allow delete: if isValidId(applicationId) && (
+        (isSignedIn() && resource.data.applicantId == request.auth.uid && resource.data.status == 'draft') ||
+        isAdmin()
+      );
+    }
+  }
+}
